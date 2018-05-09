@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Parcelable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,7 +21,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-
+import org.litepal.LitePal;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -34,7 +35,8 @@ public class MainActivity extends AppCompatActivity {
     TextView[] textViews = new TextView[100];
     EditText[] editTexts = new EditText[100];
     Button addB,clear,addT,addEdit;
-    ScrollView scrollView;
+    RelativeLayout relativeLayout;
+
 
 
 
@@ -51,14 +53,14 @@ public class MainActivity extends AppCompatActivity {
         clear=(Button) findViewById(R.id.button2);
         addT=(Button) findViewById(R.id.button3);
         addEdit=(Button) findViewById(R.id.button4);
-        /*scrollView=(ScrollView) findViewById(R.id.scrollView1);*/
         init();
     }
 
     private void init(){
+        LitePal.getDatabase();
 
-        /*final LinearLayout layout=(LinearLayout) findViewById(R.id.layout);*/
-        final RelativeLayout relativeLayout=(RelativeLayout) findViewById(R.id.Rela);
+        relativeLayout = (RelativeLayout) findViewById(R.id.Rela);
+
 
         addB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,7 +68,6 @@ public class MainActivity extends AppCompatActivity {
                 i++;
                 count=relativeLayout.getChildCount();
                 relativeLayout.addView(createButton());
-
 
             }
         });
@@ -122,7 +123,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void onActivityResult(int requestCode,int resultCode,Intent data) {
-        if (data==null){
+        if (data == null){
             return;
         }
         else {
@@ -156,7 +157,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     if (resultCode == RESULT_CANCELED){
                         int id=data.getIntExtra("id",4);
-                        btn[id].setVisibility(View.INVISIBLE);
+                        relativeLayout.removeView(btn[id]);
+//                        btn[id].setVisibility(View.INVISIBLE);
                         i--;
                     }
                     break;
@@ -183,7 +185,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     if (resultCode == RESULT_CANCELED){
                         int id=data.getIntExtra("id",6);
-                        textViews[id].setVisibility(View.INVISIBLE);
+                        relativeLayout.removeView(textViews[id]);
+//                        textViews[id].setVisibility(View.INVISIBLE);
                         j--;
                     }
                     break;
@@ -194,7 +197,7 @@ public class MainActivity extends AppCompatActivity {
     }
     protected View createButton(){
 
-        btn[i]=new Button(this);
+        btn[i] = new Button(this);
         btn[i].setId(i);
         Log.d("da","Button id is " + btn[i].getId());
         btn[i].setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -236,10 +239,7 @@ public class MainActivity extends AppCompatActivity {
                 if (motionEvent.getAction() == MotionEvent.ACTION_UP){
                     isLongPressed=false;
                 }
-
                 return false;
-
-
             }
         });
         btn[i].setOnClickListener(new View.OnClickListener() {
@@ -252,8 +252,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(MainActivity.this,"ok",Toast.LENGTH_SHORT).show();
             }
         });
-
-
         return btn[i];
 
     }
@@ -379,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
         return editTexts[k];
 
     }
-    public int getStatusBarHeight(){
+/*    public int getStatusBarHeight(){
         int result = 0;
         int resourceId = getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resourceId > 0) {
@@ -396,18 +394,28 @@ public class MainActivity extends AppCompatActivity {
         // statusBarHeight是上面所求的状态栏的高度
         int titleBarHeight = contentViewTop - getStatusBarHeight();
         return titleBarHeight;
-    }
+    }*/
+
     static boolean isLongPressed(float lastX, float lastY, float thisX,
                                  float thisY, long lastDownTime, long thisEventTime,
                                  long longPressTime) {
         float offsetX = Math.abs(thisX - lastX);
         float offsetY = Math.abs(thisY - lastY);
         long intervalTime = thisEventTime - lastDownTime;
-        if (offsetX <= 10 && offsetY <= 10 && intervalTime >= longPressTime) {
-            return true;
-        }
-        return false;
+        return (offsetX <= 10 && offsetY <= 10 && intervalTime >= longPressTime);
     }
+
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+
+
+    }
+
+
+
+
 
 }
 

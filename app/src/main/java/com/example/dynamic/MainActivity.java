@@ -30,24 +30,17 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static int index,count,i,k = 0;
+    public static int count,i,k = 0;
     public static String okc;
-    float dx, dy,x,y,w,h,r,b,Y,y1,y2;
-    long lastDownTime,eventTime;
-    boolean isLongPressed=false;
-    Button[] btn = new Button[100];
-    Button button;
-    final EditText[] editTexts = new EditText[100];
-    Button addB,clear,addEdit;
-    RelativeLayout relativeLayout;
+    private float dx, dy,x,y,w,h,r,b,Y,y1,y2;
+    private long lastDownTime,eventTime;
+    private boolean isLongPressed=false;
+    private Button[] btn = new Button[100];
+    private final EditText[] editTexts = new EditText[100];
+    private Button addB,clear,addEdit;
+    private RelativeLayout relativeLayout;
     private long mLastClickTime, mThisClickTime = 0;
     private int chosedEditId;
-
-
-
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -63,18 +56,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void init(){
         LitePal.getDatabase();
-
         relativeLayout = (RelativeLayout) findViewById(R.id.Rela);
-
-
         addB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 i++;
                 count=relativeLayout.getChildCount();
                 relativeLayout.addView(createButton());
-
-
             }
         });
 
@@ -122,13 +110,21 @@ public class MainActivity extends AppCompatActivity {
 
         //初始化界面
         List<ButtonsInfo> buttonInfos = DataSupport.findAll(ButtonsInfo.class);
-        for (ButtonsInfo buttonInfo : buttonInfos) {
+        for (ButtonsInfo buttonInfo : buttonInfos){
             relativeLayout.addView(initButton(buttonInfo.getbId(),buttonInfo.getbText(),
                     buttonInfo.getbWidth(),buttonInfo.getbHeight(),buttonInfo.getB_X(),
                     buttonInfo.getB_Y(),buttonInfo.getbColor()));
         }
-        Log.d("da","max id = " + DataSupport.max(ButtonsInfo.class,"bId",int.class));
+        Log.d("da","max button id = " + DataSupport.max(ButtonsInfo.class,"bId",int.class));
         i = DataSupport.max(ButtonsInfo.class,"bId",int.class);
+
+        List<EditTextsInfo> editTextsInfos = DataSupport.findAll(EditTextsInfo.class);
+        for (EditTextsInfo editTextsInfo : editTextsInfos){
+            relativeLayout.addView(initEditText(editTextsInfo.geteId(),editTextsInfo.geteText(),
+                    editTextsInfo.getE_X(),editTextsInfo.getE_Y()));
+        }
+        Log.d("da","max edittext id = " + DataSupport.max(EditTextsInfo.class,"eId",int.class));
+        k = DataSupport.max(EditTextsInfo.class,"eId",int.class);
 
     }
 
@@ -142,11 +138,28 @@ public class MainActivity extends AppCompatActivity {
         if (text != null){
             btn[id].setText(text);
         } else btn[id].setText("点击修改属性");
-        btn[id].setWidth(width);
-        btn[id].setHeight(height);
+        if (width * height == 0){
+            Log.d("da","PPPPPP");
+            btn[id].setWidth(250);
+            btn[id].setHeight(100);
+            //将长宽信息存储到数据库
+            ButtonsInfo buttonInfo = new ButtonsInfo();
+            buttonInfo.setbWidth(250);
+            buttonInfo.setbHeight(100);
+            buttonInfo.updateAll("bId = ?",Integer.toString(id));
+        }else {
+            btn[id].setWidth(width);
+            btn[id].setHeight(height);
+        }
         btn[id].setX(b_x);
         btn[id].setY(b_y);
-        btn[id].setBackgroundColor(color);
+        if (color == 0){
+            btn[id].setBackgroundColor(Color.parseColor("#CCCCCC"));
+            ButtonsInfo buttonInfo = new ButtonsInfo();
+            buttonInfo.setbColor(Color.parseColor("#CCCCCC"));
+            buttonInfo.updateAll("bId = ?",Integer.toString(id));
+        }else btn[id].setBackgroundColor(color);
+
 
         btn[id].setOnTouchListener(new Button.OnTouchListener() {
             @Override
@@ -209,6 +222,141 @@ public class MainActivity extends AppCompatActivity {
         return btn[id];
     }
 
+    private View initEditText(final int id, String text, float e_x, float e_y){
+
+        editTexts[id] = new EditText(this);
+        editTexts[id].setId(id);
+        Log.d("da","EditText id is " + editTexts[id].getId());
+        editTexts[id].setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
+        if (text != null){
+            if (text.equals("")){
+                editTexts[id].setHint("请输入文本");
+                editTexts[id].setHintTextColor(Color.LTGRAY);
+            }else editTexts[id].setText(text);
+        }else {
+            Log.d("da",".....");
+            editTexts[id].setHint("请输入文本");
+            editTexts[id].setHintTextColor(Color.LTGRAY);
+        }
+        editTexts[id].setX(e_x);
+        editTexts[id].setY(e_y);
+
+
+
+        editTexts[id].addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                EditTextsInfo editTextsInfo = new EditTextsInfo();
+                editTextsInfo.seteText(s.toString());
+                editTextsInfo.updateAll("eId = ?",Integer.toString(chosedEditId));
+            }
+        });
+
+
+        //获取被选中的id
+        editTexts[id].setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                Log.d("da","被选中的是 " + v.getId());
+                chosedEditId = v.getId();
+            }
+        });
+
+
+        editTexts[id].setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                Log.d("da","被点击的是 " + v.getId());
+                mThisClickTime = mLastClickTime;
+                mLastClickTime = System.currentTimeMillis();
+                if (mLastClickTime - mThisClickTime < 500){
+                    mThisClickTime = mLastClickTime = 0;
+                    //双击事件
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                    dialog.setTitle("");
+                    dialog.setMessage("确认删除该控件?");
+                    dialog.setCancelable(false);
+                    dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            relativeLayout.removeView(v);
+                            DataSupport.deleteAll(EditTextsInfo.class,"eId = ?",Integer.toString(v.getId()));
+                        }
+                    });
+                    dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                        }
+                    });
+                    dialog.show();
+                }
+            }
+        });
+
+
+        editTexts[id].setOnTouchListener(new Button.OnTouchListener() {
+            @Override
+            public boolean onTouch(View view, MotionEvent motionEvent) {
+
+                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                    dx = motionEvent.getX();
+                    dy = motionEvent.getY();
+                    w = view.getWidth();
+                    h = view.getHeight();
+                    Y = view.getY();
+                    y1 = motionEvent.getRawY();
+                    lastDownTime = motionEvent.getDownTime();
+
+                }
+                if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
+                    x=motionEvent.getX();
+                    y=motionEvent.getY();
+                    r=view.getRight();
+                    b=view.getBottom();
+                    eventTime=motionEvent.getEventTime();
+                    //检测是否长按,在非长按时检测
+                    if (!isLongPressed) {
+                        isLongPressed = isLongPressed(dx, dy, x, y, lastDownTime, eventTime, 1000);
+                    }
+                    if (isLongPressed) {
+                        //长按模式所做的事
+                        y2=motionEvent.getRawY();
+                        view.setX(motionEvent.getRawX() - dx);
+                        view.setY(Y+y2-y1);
+                        //存储到数据库
+                        EditTextsInfo editTextsInfo = new EditTextsInfo();
+                        editTextsInfo.setE_X(motionEvent.getRawX() - dx);
+                        editTextsInfo.setE_Y(Y+y2-y1);
+                        editTextsInfo.updateAll("eId = ?",Integer.toString(id));
+                    }
+                }
+                if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+                    isLongPressed=false;
+                }
+
+                return false;
+
+
+            }
+        });
+
+        return editTexts[id];
+
+    }
+
+
+
 
 
     protected void onActivityResult(int requestCode,int resultCode,Intent data) {
@@ -270,6 +418,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("da","Button id is " + btn[i].getId());
         btn[i].setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT,ViewGroup.LayoutParams.WRAP_CONTENT));
         btn[i].setText("点击修改属性");
+        Log.d("da","color is ");
 
         //存储到数据库
         ButtonsInfo buttonInfo = new ButtonsInfo();

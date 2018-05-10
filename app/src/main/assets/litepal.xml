@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <litepal>
     <dbname value = "dynamicDetails"/>
-    <version value = "1"/>
+    <version value = "6"/>
 
     <list>
-        <mapping class = "com.example.dynamic.db.buttonInfo"/>
-        <mapping class = "com.example.dynamic.db.textInfo"/>
+        <mapping class = "com.example.dynamic.db.ButtonsInfo"/>
+        <mapping class = "com.example.dynamic.db.EditTextsInfo"/>
     </list>
 </litepal>

@@ -1,4 +1,4 @@
-package com.example.dynamic;
+package com.example.dynamic.Controller;
 
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,7 +12,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.dynamic.db.ButtonsInfo;
+import com.example.dynamic.R;
+import com.example.dynamic.Database.ButtonsInfo;
 import com.skydoves.colorpickerview.ColorPickerView;
 
 import org.litepal.crud.DataSupport;

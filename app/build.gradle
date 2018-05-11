@@ -30,4 +30,6 @@ dependencies {
     compile 'com.github.skydoves:colorpickerview:1.0.0'
     testCompile 'junit:junit:4.12'
     compile 'org.litepal.android:core:1.4.1'
+    compile 'com.github.GrenderG:Toasty:1.1.1'
+    compile 'com.github.ybq:Android-SpinKit:1.1.0'
 }

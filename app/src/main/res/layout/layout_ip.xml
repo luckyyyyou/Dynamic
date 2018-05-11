@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/dialog"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    　
+    <EditText
+        android:layout_margin="8dp"
+        android:id="@+id/ipText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入IP地址 如116.142.32.25"/>
+
+    <EditText
+        android:layout_margin="8dp"
+        android:id="@+id/portText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="请输入端口号 如5500"/>
+
+</LinearLayout>

@@ -1,4 +1,4 @@
-package com.example.dynamic.db;
+package com.example.dynamic.Database;
 
 import org.litepal.crud.DataSupport;
 

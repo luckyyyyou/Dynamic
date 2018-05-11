@@ -27,24 +27,33 @@
     <Button
         android:id="@+id/button2"
         android:layout_width="40dp"
-        android:layout_height="50dp"
+        android:layout_height="40dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:background="@drawable/delete_selector" />
     <Button
         android:id="@+id/button1"
-        android:layout_width="45dp"
-        android:layout_height="50dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_toLeftOf="@id/button2"
         android:layout_alignParentBottom="true"
         android:background="@drawable/button_selector" />
     <Button
         android:id="@+id/button4"
-        android:layout_width="45dp"
-        android:layout_height="50dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_toLeftOf="@id/button1"
         android:layout_alignParentBottom="true"
         android:background="@drawable/edit_selector" />
+    <Button
+        android:id="@+id/button3"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_toLeftOf="@id/button4"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/http_selector" />
+
+    <include layout="@layout/layout_progress"/>
 
 
 

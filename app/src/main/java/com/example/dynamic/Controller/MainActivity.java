@@ -1,31 +1,38 @@
-package com.example.dynamic;
+package com.example.dynamic.Controller;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
-import android.os.SystemClock;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.dynamic.db.ButtonsInfo;
-import com.example.dynamic.db.EditTextsInfo;
+import com.example.dynamic.Database.Ip;
+import com.example.dynamic.R;
+import com.example.dynamic.Database.ButtonsInfo;
+import com.example.dynamic.Database.EditTextsInfo;
+import com.example.dynamic.Utils.Config;
+import com.github.ybq.android.spinkit.style.Circle;
 
 import org.litepal.LitePal;
 import org.litepal.crud.DataSupport;
 
 import java.util.List;
+
+import es.dmoral.toasty.Toasty;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -37,10 +44,15 @@ public class MainActivity extends AppCompatActivity {
     private boolean isLongPressed=false;
     private Button[] btn = new Button[100];
     private final EditText[] editTexts = new EditText[100];
-    private Button addB,clear,addEdit;
+    private Button addB,clear,addEdit,changeHttp;
     private RelativeLayout relativeLayout;
     private long mLastClickTime, mThisClickTime = 0;
     private int chosedEditId;
+    private List<Ip> ipList;
+    private int flag = 1;
+    private ProgressDialog progressDialog;
+    private ProgressBar progressBar;
+    private Circle circle = new Circle();
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -51,12 +63,91 @@ public class MainActivity extends AppCompatActivity {
         addB=(Button) findViewById(R.id.button1);
         clear=(Button) findViewById(R.id.button2);
         addEdit=(Button) findViewById(R.id.button4);
+        changeHttp = (Button) findViewById(R.id.button3);
+        progressBar = (ProgressBar)findViewById(R.id.spin_kit);
+        progressBar.setIndeterminateDrawable(circle);
+        showProgressDialog();
         init();
     }
 
     private void init(){
         LitePal.getDatabase();
         relativeLayout = (RelativeLayout) findViewById(R.id.Rela);
+        final LayoutInflater inflater = getLayoutInflater();
+        final View dialogIP = inflater.inflate(R.layout.layout_ip,(ViewGroup) findViewById(R.id.dialog));
+        final EditText editIP = (EditText) dialogIP.findViewById(R.id.ipText);
+        final EditText editPort = (EditText) dialogIP.findViewById(R.id.portText);
+        ipList = DataSupport.findAll(Ip.class);
+        if (ipList.size() > 0){
+            for (Ip ips : ipList){
+                Config.ADDRESS = ips.getIp();
+                Config.PORT = ips.getPort();
+            }
+        }
+        editIP.setText(Config.ADDRESS);
+        editPort.setText(String.valueOf(Config.PORT == 0 ? "" : Config.PORT));
+        changeHttp.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("aaa" ,"aaa " + Config.ADDRESS);
+                Log.d("aaa" ,"bbb " + Config.PORT);
+                editIP.setText(Config.ADDRESS);
+                editPort.setText(String.valueOf(Config.PORT == 0 ? "" : Config.PORT));
+
+                if (dialogIP.getParent() != null){
+                    ((ViewGroup) dialogIP.getParent()).removeView(dialogIP);
+                }
+                AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
+                dialog.setView(dialogIP);
+                dialog.setTitle("请输入服务器IP地址和端口号");
+                dialog.setIcon(R.drawable.b_http);
+                dialog.setCancelable(true);
+                dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        if (flag == 1){
+                            if (editIP.getText().toString().equals("")
+                                    || editPort.getText().toString().equals("")){
+                                Toasty.warning(MainActivity.this, "IP地址或端口号不能为空", Toast.LENGTH_SHORT, true).show();
+                            }else if (!(editPort.getText().toString().matches("[0-9]+"))){
+                                Toasty.warning(MainActivity.this, "端口号格式有误", Toast.LENGTH_SHORT, true).show();
+                            }
+                        }
+                    }
+                });
+                dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        if (editIP.getText().toString().equals("")
+                                || editPort.getText().toString().equals("")){
+                            Toasty.warning(MainActivity.this, "IP地址或端口号不能为空", Toast.LENGTH_SHORT, true).show();
+                            //这里flag不设置为0为了提醒用户设置失败
+                            return;
+                        }else if (!(editPort.getText().toString().matches("[0-9]+"))){
+                            Toasty.warning(MainActivity.this, "端口号格式有误", Toast.LENGTH_SHORT, true).show();
+                            return;
+                        }
+                        //设置成功
+                        flag = 0;
+                        DataSupport.deleteAll(Ip.class);
+                        Config.ADDRESS = editIP.getText().toString().replaceAll(" ","");
+                        Config.PORT = Integer.parseInt(editPort.getText().toString());
+                        Toasty.success(MainActivity.this, "设置成功", Toast.LENGTH_SHORT, true).show();
+                        Ip ip = new Ip();
+                        ip.setIp(Config.ADDRESS);
+                        ip.setPort(Config.PORT);
+                        ip.save();
+                    }
+                });
+                dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+                dialog.show();
+            }
+        });
         addB.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -75,15 +166,20 @@ public class MainActivity extends AppCompatActivity {
                 //在执行每次remove时，我们从count-2的位置即textview上面的那个控件开始删除~
                 AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
                 dialog.setTitle("");
-                dialog.setMessage("确认清空布局?");
+                dialog.setMessage("确认初始化界面和设置？一旦确认无法撤回");
                 dialog.setCancelable(false);
                 dialog.setPositiveButton("确认", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        relativeLayout.removeViews(3,count-3);
+                        relativeLayout.removeViews(4,count-4);
                         DataSupport.deleteAll(ButtonsInfo.class);
                         DataSupport.deleteAll(EditTextsInfo.class);
+                        DataSupport.deleteAll(Ip.class);
                         i = k = 0;
+                        Config.ADDRESS = "";
+                        Config.PORT = 0;
+                        flag = 1;
+                        Toasty.success(MainActivity.this,"初始化成功",Toast.LENGTH_SHORT,true).show();
                     }
                 });
                 dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
@@ -125,7 +221,6 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.d("da","max edittext id = " + DataSupport.max(EditTextsInfo.class,"eId",int.class));
         k = DataSupport.max(EditTextsInfo.class,"eId",int.class);
-
     }
 
     private View initButton(final int id, String text, int width, int height,
@@ -639,12 +734,29 @@ public class MainActivity extends AppCompatActivity {
 
 
     @Override
-    public void onPause(){
-        super.onPause();
-
-
-
+    public void onResume(){
+        super.onResume();
+        closeProgressDialog();
     }
+
+    public void showProgressDialog(){
+        if (progressDialog == null){
+            progressDialog = new ProgressDialog(this);
+            progressDialog.setIndeterminateDrawable(circle);
+            progressDialog.setMessage("正在加载数据...");
+            progressDialog.setCanceledOnTouchOutside(false);
+
+        }
+        progressDialog.show();
+    }
+
+    public void closeProgressDialog(){
+        if (progressDialog != null){
+            progressDialog.dismiss();
+        }
+    }
+
+
 
 
 
